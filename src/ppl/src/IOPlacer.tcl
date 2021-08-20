@@ -257,6 +257,81 @@ sta::define_cmd_args "place_pins" {[-hor_layers h_layers]\
                                   [-group_pins pin_list]
                                  }
 
+proc io_placer { args } {
+  utl::warn PPL 14 "io_placer command is deprecated. Use place_pins instead."
+  [eval place_pins $args]
+}
+sta::define_cmd_args "read_pin" {[-name pin_name]\
+                                [-layer pin_layer]\
+                                [-loc location]\
+                                [-width pin_width]\
+                                [-depth pin_depth]\
+                                [-orientation side]
+                                 } 
+proc read_pin { args } {
+  sta::parse_key_args "place_pins" args \
+  keys {-name -layer -loc -width -depth -orientation}
+
+  set dbTech [ord::get_db_tech]
+  if { $dbTech == "NULL" } {
+    utl::error PPL 100 "no technology found."
+  }
+
+  set dbBlock [ord::get_db_block]
+  if { $dbBlock == "NULL" } {
+    utl::error PPL 101 "no block found."
+  }
+
+  if [info exists keys(-name)] {
+    set pin_name $keys(-name)
+  } else {
+    utl::error PPL 102 "-name is required."
+  }
+
+  if [info exists keys(-layer)] {
+    set pin_layer $keys(-layer)
+  } else {
+    utl::error PPL 103 "-layer is required."
+  }
+
+  if [info exists keys(-loc)] {
+    set location $keys(-loc)
+  } else {
+    utl::error PPL 104 "-loc is required."
+  }
+
+  if {! [llength $location] eq 2} {
+    utl::error PPL 105 "x y are needed"
+  }
+
+  if [info exists keys(-width)] {
+    set width $keys(-width)
+  } else {
+    utl::error PPL 106 "-width is required."
+  }
+
+  if [info exists keys(-depth)] {
+    set depth $keys(-depth)
+  } else {
+    utl::error PPL 107 "-depth is required."
+  }
+
+  if [info exists keys(-orientation)] {
+    set orientation $keys(-orientation)
+  } else {
+    utl::error PPL 108 "-orientation is required."
+  }
+  set db_bterm [$dbBlock findBTerm $pin_name]
+  if {$db_bterm == "NULL"} {
+    utl::error PPL 109 "pin $pin_name not found."
+  }
+  set edge_ [ppl::parse_edge "-orientation" $orientation]
+  set layer_ [$dbTech findRoutingLayer $pin_layer]
+  puts "$pin_name $pin_layer [lindex $location 0] [lindex $location 1] $width $depth $orientation"
+  ppl::run_single_io_read $db_bterm $layer_ [lindex $location 0] [lindex $location 1] $width $depth $edge_
+}
+
+
 proc place_pins { args } {
   set regions [ppl::parse_excludes_arg $args]
   set pin_groups [ppl::parse_group_pins_arg $args]

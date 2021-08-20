@@ -155,6 +155,7 @@ class IOPlacer
   void addVerLayer(int layer) { ver_layers_.insert(layer); }
   Edge getEdge(std::string edge);
   Direction getDirection(std::string direction);
+  void readIOfromFileIntoDB(odb::dbBTerm* _pin_name, odb::dbTechLayer* _layer, double _llx, double _lly, double _width, double _depth, Edge _orientation);
   void addPinGroup(PinGroup* group);
   void addTopLayerPinPattern(int layer, int x_step, int y_step,
                              int llx, int lly, int urx, int ury,
@@ -238,6 +239,7 @@ class IOPlacer
   void populateIOPlacer(std::set<int> hor_layer_idx,
                         std::set<int> ver_layer_idx);
   void commitIOPlacementToDB(std::vector<IOPin>& assignment);
+  int micronsToMfgGrid(double dist) const;
   void commitIOPinToDB(const IOPin& pin);
   void initCore(std::set<int> hor_layer_idxs, std::set<int> ver_layer_idxs);
   void initNetlist();
